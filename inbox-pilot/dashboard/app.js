@@ -322,10 +322,45 @@ async function refreshEmails() {
         const tbody = document.getElementById('emails-tbody');
         tbody.innerHTML = '';
         if (!d.emails?.length) {
-            tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No emails processed yet</td></tr>';
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No emails processed yet</td></tr>';
             return;
         }
-        d.emails.forEach(addEmailRow);
+        // API returns newest first — append in order so newest stays on top
+        d.emails.forEach(data => {
+            let ts;
+            if (data.created_at) {
+                const emailDate = new Date(data.created_at.replace(' ', 'T') + (data.created_at.includes('+') || data.created_at.includes('Z') ? '' : 'Z'));
+                ts = emailDate.toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'});
+            } else {
+                ts = '--:--';
+            }
+            const uClass = `urgency-${data.urgency||'low'}`;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td onclick="showReasoning(${JSON.stringify(data).replace(/"/g, '&quot;')})">${esc((data.sender||'').replace(/[<>]/g,'').slice(0,30))}</td>
+                <td onclick="showReasoning(${JSON.stringify(data).replace(/"/g, '&quot;')})">${esc((data.subject||'').slice(0,50))}</td>
+                <td onclick="showReasoning(${JSON.stringify(data).replace(/"/g, '&quot;')})"><span class="urgency-pill ${uClass}">${(data.urgency||'low').toUpperCase()}</span></td>
+                <td onclick="showReasoning(${JSON.stringify(data).replace(/"/g, '&quot;')})"><span class="action-pill">${data.action_type||'-'}</span></td>
+                <td onclick="showReasoning(${JSON.stringify(data).replace(/"/g, '&quot;')})">Processed</td>
+                <td onclick="showReasoning(${JSON.stringify(data).replace(/"/g, '&quot;')})" class="time-cell">${ts}</td>
+                <td style="position: relative;">
+                    <button class="row-menu-btn" onclick="toggleRowMenu(this, event)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    </button>
+                    <div class="row-dropdown-menu">
+                        <div class="row-dropdown-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            Update Display Name
+                        </div>
+                        <div class="row-dropdown-item delete-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            Delete
+                        </div>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
     } catch(e) {}
 }
 
