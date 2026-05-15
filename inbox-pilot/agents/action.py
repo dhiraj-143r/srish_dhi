@@ -63,6 +63,26 @@ async def action_agent(state: EmailState) -> dict:
             log.append({"agent": "action", "status": "completed", "ts": time.time(),
                         "msg": "📁 Email archived (no action needed)"})
 
+        elif action_type == "escalate":
+            # Send urgent notification
+            await gumloop_tools.trigger_notification(
+                channel="critical",
+                message=f"🚨 ESCALATED: {state.get('subject', '')} from {state.get('sender', '')}",
+                urgency="critical",
+            )
+            # Send auto-reply acknowledging the emergency
+            if state.get("draft_reply"):
+                await agentmail_tools.send_reply(
+                    inbox_id=state.get("inbox_id", ""),
+                    to=state.get("sender", ""),
+                    subject=state.get("draft_subject", f"Re: {state.get('subject', '')}"),
+                    body=state.get("draft_reply", ""),
+                    thread_id=state.get("thread_id"),
+                )
+            action_result = {"type": "escalated", "details": {"message_id": state.get("message_id"), "notification": "sent"}}
+            log.append({"agent": "action", "status": "completed", "ts": time.time(),
+                        "msg": f"🚨 ESCALATED to leadership: {state.get('subject', '')[:50]}"})
+
         else:
             action_result = {"type": action_type, "details": {"note": "Action type not implemented"}}
             log.append({"agent": "action", "status": "completed", "ts": time.time(),

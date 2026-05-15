@@ -28,7 +28,7 @@ You MUST respond with a JSON object containing exactly these fields:
 {
     "urgency": "high" | "medium" | "low",
     "category": "meeting_request" | "task" | "question" | "important" | "newsletter" | "spam" | "introduction" | "follow_up",
-    "action_type": "reply" | "create_task" | "archive" | "forward",
+    "action_type": "reply" | "create_task" | "archive" | "escalate" | "forward",
     "needs_research": true | false,
     "reasoning": "Your step-by-step reasoning for this classification..."
 }
@@ -36,7 +36,7 @@ You MUST respond with a JSON object containing exactly these fields:
 Classification rules:
 - URGENCY: "high" = needs response within hours (deadlines, urgent requests, boss/client emails). "medium" = needs response within a day. "low" = informational, no response needed.
 - CATEGORY: Choose the most fitting category based on email content and intent.
-- ACTION: "reply" = draft and send a response. "create_task" = extract action items. "archive" = no action needed, just file. "forward" = needs to be forwarded to someone else.
+- ACTION: "reply" = draft and send a response. "create_task" = extract action items and send acknowledgment. "archive" = no action needed, just file. "escalate" = CRITICAL situations requiring immediate human intervention (security breaches, data leaks, legal threats, system-wide outages, executive-level emergencies). Use escalate ONLY for genuinely critical emergencies, not for normal urgent emails. "forward" = needs to be forwarded to someone else.
 - NEEDS_RESEARCH: Set to true if understanding the sender's company/background would help craft a better response. Usually true for unknown senders, partnership inquiries, or business proposals.
 - REASONING: Explain your classification step-by-step. This is critical for transparency. Include what signals you used (keywords, sender, tone, etc.).
 """
