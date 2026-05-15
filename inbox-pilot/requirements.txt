@@ -26,5 +26,5 @@ apscheduler>=3.10.0
 # WebSocket
 websockets>=12.0
 
-# Observability (optional - for Omium bonus)
-# omium>=0.1.0
+# Observability
+omium>=0.4.0

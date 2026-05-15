@@ -19,7 +19,15 @@ llm = ChatOpenAI(
     temperature=0.2,
 )
 
+# Omium tracing (optional)
+try:
+    import omium
+    _trace = omium.trace(name="researcher_agent", span_type="agent")
+except ImportError:
+    _trace = lambda f: f
 
+
+@_trace
 async def researcher_agent(state: EmailState) -> dict:
     """
     Research the sender using Firecrawl web scraping.

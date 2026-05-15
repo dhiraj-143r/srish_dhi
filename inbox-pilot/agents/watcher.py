@@ -10,7 +10,15 @@ from tools import agentmail_tools
 
 logger = logging.getLogger("inbox-pilot.agents.watcher")
 
+# Omium tracing (optional)
+try:
+    import omium
+    _trace = omium.trace(name="watcher_agent", span_type="agent")
+except ImportError:
+    _trace = lambda f: f
 
+
+@_trace
 async def watcher_agent(state: EmailState) -> dict:
     """
     Parse incoming email from webhook payload.

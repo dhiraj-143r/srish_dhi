@@ -41,7 +41,15 @@ Classification rules:
 - REASONING: Explain your classification step-by-step. This is critical for transparency. Include what signals you used (keywords, sender, tone, etc.).
 """
 
+# Omium tracing (optional)
+try:
+    import omium
+    _trace = omium.trace(name="triage_agent", span_type="agent")
+except ImportError:
+    _trace = lambda f: f
 
+
+@_trace
 async def triage_agent(state: EmailState) -> dict:
     """
     Classify the email using GPT-4o with structured output.

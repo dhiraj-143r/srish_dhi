@@ -21,7 +21,15 @@ SYSTEM_PROMPT = """You are a professional email reply drafter. Write contextual,
 - Sign off as "InboxPilot AI Assistant"
 Respond with ONLY the reply body text."""
 
+# Omium tracing (optional)
+try:
+    import omium
+    _trace = omium.trace(name="drafter_agent", span_type="agent")
+except ImportError:
+    _trace = lambda f: f
 
+
+@_trace
 async def drafter_agent(state: EmailState) -> dict:
     """Generate a contextual email reply using GPT-4o."""
     log = state.get("processing_log", [])

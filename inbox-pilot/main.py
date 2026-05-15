@@ -6,11 +6,19 @@ import logging
 import time
 import json
 import asyncio
+import uuid
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+# Omium SDK for observability tracing
+try:
+    import omium
+    OMIUM_AVAILABLE = True
+except ImportError:
+    OMIUM_AVAILABLE = False
 
 from config import config
 from database.db import (
@@ -71,6 +79,22 @@ async def lifespan(app: FastAPI):
     # Init database
     await init_db()
     logger.info("✅ Database initialized")
+    
+    # Initialize Omium tracing
+    if OMIUM_AVAILABLE and config.has_omium():
+        try:
+            omium.init(
+                api_key=config.OMIUM_API_KEY,
+                project="inbox-pilot",
+                auto_trace=True,
+                auto_checkpoint=True,
+            )
+            omium.instrument_langgraph()
+            logger.info("🔍 Omium tracing initialized (LangGraph auto-instrumented)")
+        except Exception as e:
+            logger.warning(f"⚠️ Omium init failed: {e}")
+    else:
+        logger.info("ℹ️ Omium tracing not configured (optional)")
     
     # Create AgentMail inbox
     try:
@@ -174,6 +198,14 @@ async def process_email(payload: dict):
         "timestamp": start_time,
     })
     
+    # Set Omium execution ID for this email's trace
+    trace_id = str(uuid.uuid4())
+    if OMIUM_AVAILABLE and omium.is_initialized():
+        try:
+            omium.set_execution_id(trace_id)
+        except Exception:
+            pass
+    
     # Run the pipeline
     try:
         initial_state = {
@@ -182,6 +214,7 @@ async def process_email(payload: dict):
             "message_id": message_id,
             "processing_log": [],
             "start_time": start_time,
+            "omium_trace_id": trace_id,
         }
         
         result = await pipeline.ainvoke(initial_state)

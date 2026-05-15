@@ -11,7 +11,15 @@ from tools.roboflow_tools import classify_attachment, get_attachment_type
 
 logger = logging.getLogger("inbox-pilot.agents.vision")
 
+# Omium tracing (optional)
+try:
+    import omium
+    _trace = omium.trace(name="vision_agent", span_type="agent")
+except ImportError:
+    _trace = lambda f: f
 
+
+@_trace
 async def vision_agent(state: EmailState) -> dict:
     """
     Analyze email attachments using Roboflow computer vision.

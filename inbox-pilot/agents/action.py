@@ -11,7 +11,15 @@ from database.db import save_processed_email, save_agent_log
 
 logger = logging.getLogger("inbox-pilot.agents.action")
 
+# Omium tracing (optional)
+try:
+    import omium
+    _trace = omium.trace(name="action_agent", span_type="agent")
+except ImportError:
+    _trace = lambda f: f
 
+
+@_trace
 async def action_agent(state: EmailState) -> dict:
     """Execute the decided action based on triage results."""
     log = state.get("processing_log", [])
