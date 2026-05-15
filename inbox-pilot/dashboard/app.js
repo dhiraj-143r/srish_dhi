@@ -77,14 +77,14 @@ function addThread(flag, agent, subject, preview, time) {
     if (empty) empty.remove();
 
     const now = new Date();
-    const ts = now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
+    const ts = time || now.toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
 
     const item = document.createElement('div');
     item.className = 'thread-item';
     item.innerHTML = `
         <svg class="thread-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <svg class="thread-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-        <span class="thread-agent">AgentMail</span>
+        <span class="thread-agent">${esc(agent || 'AgentMail')}</span>
         <span class="thread-message">
             ${subject ? `<span class="subject">${esc(subject)}</span>` : ''}
             <span class="preview"> - ${esc(preview)}</span>
@@ -216,9 +216,15 @@ function addEmailRow(data) {
     const empty = tbody.querySelector('.empty-row');
     if (empty) empty.remove();
 
+    // Use the email's actual created_at time, not current time
+    let ts;
+    if (data.created_at) {
+        const emailDate = new Date(data.created_at.replace(' ', 'T') + (data.created_at.includes('+') || data.created_at.includes('Z') ? '' : 'Z'));
+        ts = emailDate.toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'});
+    } else {
+        ts = new Date().toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'});
+    }
     const row = document.createElement('tr');
-    
-    const ts = new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'});
     const uClass = `urgency-${data.urgency||'low'}`;
 
     row.innerHTML = `
@@ -637,13 +643,44 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshStats();
     refreshEmails();
     initChart();
+    loadUnifiedInbox();
     
-    // Auto-refresh every 10 seconds: stats, email table, and chart
+    // Auto-refresh every 10 seconds: stats and email table
     setInterval(() => {
         refreshStats();
         refreshEmails();
-        // Re-plot chart bars from real data
+    }, 10000);
+    
+    // Rebuild chart less frequently (every 30s)
+    setInterval(() => {
         const activeFilter = document.getElementById('dropdown-text')?.textContent || '24 hours';
         rebuildChart(activeFilter);
-    }, 10000);
+    }, 30000);
 });
+
+// Load UNIFIED INBOX from database on page load
+async function loadUnifiedInbox() {
+    try {
+        const r = await fetch('/api/emails');
+        const d = await r.json();
+        if (!d.emails?.length) return;
+        
+        // Show the most recent 10 emails in the feed
+        const recent = d.emails.slice(0, 10);
+        recent.reverse(); // oldest first so newest ends up on top
+        
+        recent.forEach(email => {
+            const emailDate = new Date(email.created_at.replace(' ', 'T') + (email.created_at.includes('+') || email.created_at.includes('Z') ? '' : 'Z'));
+            const timeStr = emailDate.toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute: '2-digit'});
+            
+            const urgLabel = (email.urgency || 'low').toUpperCase();
+            const subject = email.subject || 'No subject';
+            const action = email.action_type || 'unknown';
+            const sender = (email.sender || '').replace(/[<>]/g, '').split('@')[0];
+            
+            addThread('', sender, subject, `${urgLabel} -- ${action}`, timeStr);
+        });
+    } catch(e) {
+        console.error('Failed to load inbox feed:', e);
+    }
+}
