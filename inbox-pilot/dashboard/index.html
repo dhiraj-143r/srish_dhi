@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InboxPilot — Autonomous Email Agent</title>
+    <meta name="description"
+        content="Real-time dashboard for InboxPilot autonomous multi-agent email operations pipeline.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css?v=20">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside id="sidebar">
+        <div class="sidebar-logo">
+            <span class="logo-text">InboxPilot</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="nav-item active" data-section="overview" onclick="switchSection('overview', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" />
+                    <rect x="14" y="3" width="7" height="7" />
+                    <rect x="3" y="14" width="7" height="7" />
+                    <rect x="14" y="14" width="7" height="7" />
+                </svg>
+                <span>Overview</span>
+            </a>
+            <a class="nav-item" data-section="inbox" onclick="switchSection('inbox', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <polyline points="22,6 12,13 2,6" />
+                </svg>
+                <span>Inbox</span>
+            </a>
+            <a class="nav-item" data-section="agents" onclick="switchSection('agents', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+                <span>Agents</span>
+            </a>
+            <a class="nav-item" data-section="webhooks" onclick="switchSection('webhooks', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
+                </svg>
+                <span>Webhooks</span>
+            </a>
+            <a class="nav-item" data-section="metrics" onclick="switchSection('metrics', this)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                <span>Metrics</span>
+            </a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="sidebar-divider"></div>
+            <a href="https://docs.agentmail.to" target="_blank" class="nav-item">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span>Documentation</span>
+            </a>
+            <div class="sidebar-status">
+                <div class="status-indicator" id="ws-indicator"></div>
+                <span id="ws-status-text">Connecting...</span>
+            </div>
+        </div>
+    </aside>
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- ═══════════════ OVERVIEW SECTION ═══════════════ -->
+        <div class="page-section active" id="section-overview">
+            <div class="breadcrumb">
+                <span>Dashboard</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+                <span class="active">Overview</span>
+            </div>
+            <!-- Pipeline Activity -->
+            <section class="card activity-card">
+                <div class="activity-header">
+                    <div>
+                        <h2 class="card-title-mono">EMAIL ACTIVITY</h2>
+                        <p class="card-subtitle">10-min email volume for the last 24 hours</p>
+                    </div>
+                    <div class="activity-stats">
+                        <div class="custom-dropdown" id="timeDropdown" onclick="toggleDropdown()">
+                            <div class="dropdown-selected">
+                                <span id="dropdown-text">24 hours</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polyline points="6 9 12 15 18 9" />
+                                </svg>
+                            </div>
+                            <div class="dropdown-menu" id="dropdownMenu">
+                                <div class="dropdown-item active" onclick="selectTime('24 hours', this, event)">
+                                    <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    24 hours
+                                </div>
+                                <div class="dropdown-item" onclick="selectTime('7 days', this, event)">
+                                    <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    7 days
+                                </div>
+                                <div class="dropdown-item" onclick="selectTime('30 days', this, event)">
+                                    <svg class="check-icon" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    30 days
+                                </div>
+                            </div>
+                        </div>
+                        <div class="activity-stat">
+                            <div class="stat-top"><span class="stat-dot blue"></span><span
+                                    class="stat-label">Sent</span></div>
+                            <span class="stat-number" id="stat-processed">5</span>
+                        </div>
+                        <div class="activity-stat">
+                            <div class="stat-top"><span class="stat-dot green"></span><span
+                                    class="stat-label">Received</span></div>
+                            <span class="stat-number" id="stat-replied">0</span>
+                        </div>
+                        <div class="activity-stat">
+                            <div class="stat-top"><span class="stat-dot amber"></span><span
+                                    class="stat-label">Complained</span></div>
+                            <span class="stat-number" id="stat-tasks">0</span>
+                        </div>
+                        <div class="activity-stat">
+                            <div class="stat-top"><span class="stat-dot red"></span><span
+                                    class="stat-label">Bounced</span></div>
+                            <span class="stat-number" id="stat-urgent">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="activity-chart">
+                    <div class="chart-timeline" id="chart-timeline">
+                        <div class="chart-hover-band" id="chart-hover-band"></div>
+                    </div>
+                    <div class="chart-x-axis" id="chart-x-axis"></div>
+                    <div class="chart-tooltip" id="chart-tooltip">
+                        <div class="tooltip-header" id="tt-time">May 14, 11:20 PM</div>
+                        <div class="tooltip-body">
+                            <div class="tooltip-row">
+                                <div class="tt-content"><span>Sent</span><span id="tt-processed">0</span></div>
+                            </div>
+                            <div class="tooltip-row">
+                                <div class="tt-content"><span>Received</span><span id="tt-replied">0</span></div>
+                            </div>
+                            <div class="tooltip-row">
+                                <div class="tt-content"><span>Complained</span><span id="tt-tasks">0</span></div>
+                            </div>
+                            <div class="tooltip-row">
+                                <div class="tt-content"><span>Bounced</span><span id="tt-urgent">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Bottom Grid -->
+            <div class="bottom-grid">
+                <section class="card inbox-card">
+                    <div class="card-header-row">
+                        <div>
+                            <h2 class="card-title-mono">UNIFIED INBOX</h2>
+                            <p class="card-subtitle">Latest threads across all inboxes</p>
+                        </div>
+                        <button class="view-all-btn" onclick="clearFeed()">VIEW ALL →</button>
+                    </div>
+                    <div class="thread-list" id="live-feed">
+                        <div class="thread-empty">
+                            <p>Waiting for incoming emails...</p>
+                            <p class="hint">Send an email to the agent inbox to see agents in action</p>
+                        </div>
+                    </div>
+                </section>
+                <section class="card resources-card">
+                    <h2 class="card-title-mono">RESOURCES</h2>
+
+                    <div class="resource-item-simple">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path
+                                d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+                            <path d="M2 12h20" />
+                        </svg>
+                        <span class="resource-name">Domains</span>
+                        <span class="resource-val-right">0/10</span>
+                        <div class="resource-bar">
+                            <div class="resource-bar-fill" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div class="resource-item-simple">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                            <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                        <span class="resource-name">Inboxes</span>
+                        <span class="resource-val-right">1/10</span>
+                        <div class="resource-bar">
+                            <div class="resource-bar-fill" style="width:10%"></div>
+                        </div>
+                    </div>
+                    <div class="resource-divider"></div>
+                    <div class="metrics-row-simple">
+                        <div class="metric-block">
+                            <div class="metric-value" id="metric-rate">0.0%</div>
+                            <div class="metric-label">SUCCESS RATE</div>
+                        </div>
+                        <div class="metric-block">
+                            <div class="metric-value">0.0%</div>
+                            <div class="metric-label">COMPLAINED RATE</div>
+                        </div>
+                    </div>
+                    <div class="resource-divider"></div>
+                    <div class="resource-info-row"><span class="resource-small">Emails processed · 24h</span></div>
+                    <button class="digest-btn" onclick="triggerDigest()">Generate Digest</button>
+                </section>
+            </div>
+        </div>
+        <!-- ═══════════════ INBOX SECTION ═══════════════ -->
+        <div class="page-section" id="section-inbox">
+            <div class="breadcrumb">
+                <span>Dashboard</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+                <span class="active">Inbox</span>
+            </div>
+            <section class="card table-card" style="padding: 0;">
+                <div class="card-header-row" style="padding: 20px 24px;">
+                    <div>
+                        <h2 class="card-title-mono"
+                            style="font-size: 20px; font-weight: 600; text-transform: none; font-family: var(--sans);">
+                            Inboxes</h2>
+                        <p class="card-subtitle" style="margin-top: 4px;">Manage your email inboxes</p>
+                    </div>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <span
+                            style="font-family: var(--mono); font-size: 11px; color: var(--text-primary); font-weight: 500; cursor: pointer;">UNIFIED
+                            INBOX</span>
+                        <span
+                            style="font-family: var(--mono); font-size: 11px; color: var(--text-primary); font-weight: 500; cursor: pointer;">SMTP/IMAP</span>
+                        <button
+                            style="background: #fff; color: #000; border: none; padding: 8px 12px; border-radius: 4px; font-family: var(--mono); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 5v14M5 12h14" />
+                            </svg>
+                            CREATE INBOX
+                        </button>
+                    </div>
+                </div>
+                <div class="table-container" style="border-top: 1px solid var(--border);">
+                    <table id="emails-table">
+                        <thead>
+                            <tr>
+                                <th>FROM</th>
+                                <th>SUBJECT</th>
+                                <th>URGENCY</th>
+                                <th>ACTION</th>
+                                <th>STATUS</th>
+                                <th>TIME</th>
+                                <th style="width: 40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="emails-tbody">
+                            <tr class="empty-row">
+                                <td colspan="7">No emails processed yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div
+                    style="display: flex; justify-content: flex-end; align-items: center; padding: 12px 24px; border-top: 1px solid var(--border); gap: 16px;">
+                    <div
+                        style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-secondary);">
+                        Rows per page
+                        <select
+                            style="background: transparent; border: 1px solid var(--border); color: var(--text-primary); padding: 4px; border-radius: 4px; outline: none; cursor: pointer;">
+                            <option>30</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <button
+                            style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&laquo;</button>
+                        <button
+                            style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&lsaquo;</button>
+                        <span style="font-size: 12px; color: var(--text-secondary); margin: 0 8px;">1 to 2</span>
+                        <button
+                            style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&rsaquo;</button>
+                        <button
+                            style="background: transparent; border: 1px solid var(--border); color: var(--text-secondary); width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&raquo;</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <!-- ═══════════════ AGENTS SECTION ═══════════════ -->
+        <div class="page-section" id="section-agents">
+            <div class="breadcrumb">
+                <span>Dashboard</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+                <span class="active">Agents</span>
+            </div>
+            <div class="agents-grid">
+                <div class="card agent-card">
+                    <div class="agent-header">
+                        <span class="agent-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg></span>
+                        <div>
+                            <h3 class="agent-name">Watcher Agent</h3>
+                            <p class="agent-role">Email Parser</p>
+                        </div>
+                        <span class="agent-status-dot online"></span>
+                    </div>
+                    <p class="agent-desc">Parses incoming emails from AgentMail webhooks. Fetches full message content,
+                        thread context, and attachment metadata.</p>
+                    <div class="agent-tech"><span class="tech-tag">AgentMail SDK</span><span
+                            class="tech-tag">Parsing</span></div>
+                </div>
+                <div class="card agent-card">
+                    <div class="agent-header">
+                        <span class="agent-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M12 2a10 10 0 1 0 10 10H12V2Z" />
+                                <path d="M12 12 2.1 7.1" />
+                                <path d="M12 12l9.9-4.9" />
+                            </svg></span>
+                        <div>
+                            <h3 class="agent-name">Triage Agent</h3>
+                            <p class="agent-role">LLM Classifier</p>
+                        </div>
+                        <span class="agent-status-dot online"></span>
+                    </div>
+                    <p class="agent-desc">Classifies urgency, category, and action using GPT-4o with structured JSON
+                        output and chain-of-thought reasoning.</p>
+                    <div class="agent-tech"><span class="tech-tag">GPT-4o</span><span class="tech-tag">JSON
+                            Mode</span><span class="tech-tag">CoT</span></div>
+                </div>
+                <div class="card agent-card">
+                    <div class="agent-header">
+                        <span class="agent-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="2" y1="12" x2="22" y2="12" />
+                                <path
+                                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                            </svg></span>
+                        <div>
+                            <h3 class="agent-name">Research Agent</h3>
+                            <p class="agent-role">Web Scraper</p>
+                        </div>
+                        <span class="agent-status-dot online"></span>
+                    </div>
+                    <p class="agent-desc">Researches sender background by scraping company websites and email URLs using
+                        Firecrawl. Generates LLM summary.</p>
+                    <div class="agent-tech"><span class="tech-tag">Firecrawl</span><span class="tech-tag">GPT-4o</span>
+                    </div>
+                </div>
+                <div class="card agent-card">
+                    <div class="agent-header">
+                        <span class="agent-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg></span>
+                        <div>
+                            <h3 class="agent-name">Vision Agent</h3>
+                            <p class="agent-role">Image Classifier</p>
+                        </div>
+                        <span class="agent-status-dot online"></span>
+                    </div>
+                    <p class="agent-desc">Analyzes email attachments using Roboflow computer vision. Classifies images
+                        as invoices, receipts, documents, etc.</p>
+                    <div class="agent-tech"><span class="tech-tag">Roboflow</span><span class="tech-tag">CLIP</span>
+                    </div>
+                </div>
+                <div class="card agent-card">
+                    <div class="agent-header">
+                        <span class="agent-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg></span>
+                        <div>
+                            <h3 class="agent-name">Drafter Agent</h3>
+                            <p class="agent-role">Reply Generator</p>
+                        </div>
+                        <span class="agent-status-dot online"></span>
+                    </div>
+                    <p class="agent-desc">Generates contextual, tone-appropriate email replies using triage analysis,
+                        research findings, and attachment context.</p>
+                    <div class="agent-tech"><span class="tech-tag">GPT-4o</span><span class="tech-tag">Context
+                            Fusion</span></div>
+                </div>
+                <div class="card agent-card">
+                    <div class="agent-header">
+                        <span class="agent-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                            </svg></span>
+                        <div>
+                            <h3 class="agent-name">Action Agent</h3>
+                            <p class="agent-role">Executor</p>
+                        </div>
+                        <span class="agent-status-dot online"></span>
+                    </div>
+                    <p class="agent-desc">Executes final actions: sends replies via AgentMail, creates tasks via
+                        Gumloop, archives emails, and logs results.</p>
+                    <div class="agent-tech"><span class="tech-tag">AgentMail</span><span
+                            class="tech-tag">Gumloop</span><span class="tech-tag">SQLite</span></div>
+                </div>
+                <div class="card agent-card">
+                    <div class="agent-header">
+                        <span class="agent-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="20" x2="18" y2="10" />
+                                <line x1="12" y1="20" x2="12" y2="4" />
+                                <line x1="6" y1="20" x2="6" y2="14" />
+                            </svg></span>
+                        <div>
+                            <h3 class="agent-name">Summarizer Agent</h3>
+                            <p class="agent-role">Digest Generator</p>
+                        </div>
+                        <span class="agent-status-dot online"></span>
+                    </div>
+                    <p class="agent-desc">Generates periodic email digests summarizing all processed emails. Runs on a
+                        6-hour cron schedule.</p>
+                    <div class="agent-tech"><span class="tech-tag">GPT-4o</span><span
+                            class="tech-tag">APScheduler</span><span class="tech-tag">Cron</span></div>
+                </div>
+            </div>
+            <!-- Pipeline Graph -->
+            <section class="card" style="padding:24px;">
+                <h2 class="card-title-mono" style="margin-bottom:16px;">PIPELINE GRAPH</h2>
+                <div class="pipeline-visual">
+                    <div class="pipeline-node start">START</div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-node">Watcher</div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-node">Triage</div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-branch">
+                        <div class="branch-path"><span class="branch-label">needs_research</span>
+                            <div class="pipeline-node small">Research</div>
+                        </div>
+                        <div class="branch-path"><span class="branch-label">has_attachments</span>
+                            <div class="pipeline-node small">Vision</div>
+                        </div>
+                        <div class="branch-path"><span class="branch-label">simple</span>
+                            <div class="pipeline-node small dim">skip</div>
+                        </div>
+                    </div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-node">Drafter</div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-node">Action</div>
+                    <div class="pipeline-arrow">→</div>
+                    <div class="pipeline-node end">END</div>
+                </div>
+            </section>
+        </div>
+        <!-- ═══════════════ WEBHOOKS SECTION ═══════════════ -->
+        <div class="page-section" id="section-webhooks">
+            <div class="breadcrumb">
+                <span>Dashboard</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+                <span class="active">Webhooks</span>
+            </div>
+            <section class="card" style="padding:24px;">
+                <div class="card-header-row" style="padding:0 0 16px;">
+                    <div>
+                        <h2 class="card-title-mono">WEBHOOK CONFIGURATION</h2>
+                        <p class="card-subtitle">Register a webhook URL to receive AgentMail events</p>
+                    </div>
+                    <button class="action-btn" onclick="registerWebhook()" style="padding:8px 16px;">+ Register
+                        Webhook</button>
+                </div>
+                <div class="webhook-steps">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h4>Start ngrok tunnel</h4>
+                            <pre class="code-block">ngrok http 8000</pre>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h4>Copy the HTTPS URL</h4>
+                            <p class="step-desc">Use the Forwarding URL that looks like
+                                <code>https://xxxx.ngrok-free.app</code>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <h4>Register the webhook</h4>
+                            <pre class="code-block">curl -X POST http://localhost:8000/api/webhook/register \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://YOUR-NGROK-URL/webhook/email"}'</pre>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <h4>Send a test email</h4>
+                            <p class="step-desc">Send any email to <code id="webhook-inbox-email">loading...</code> and
+                                watch the pipeline process it in real-time</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="card" style="padding:24px;">
+                <h2 class="card-title-mono" style="margin-bottom:12px;">SUPPORTED EVENTS</h2>
+                <table style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>EVENT</th>
+                            <th>DESCRIPTION</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>message.received</code></td>
+                            <td class="text-muted">Fires when a new email arrives in the inbox</td>
+                            <td><span class="urgency-pill"
+                                    style="background:rgba(74,222,128,0.12);color:var(--accent-green);">ACTIVE</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>message.sent</code></td>
+                            <td class="text-muted">Fires when an email is sent from the inbox</td>
+                            <td><span class="urgency-pill"
+                                    style="background:rgba(78,83,102,0.12);color:var(--text-muted);">AVAILABLE</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>message.bounced</code></td>
+                            <td class="text-muted">Fires when a sent email bounces</td>
+                            <td><span class="urgency-pill"
+                                    style="background:rgba(78,83,102,0.12);color:var(--text-muted);">AVAILABLE</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+        </div>
+        <!-- ═══════════════ METRICS SECTION ═══════════════ -->
+        <div class="page-section" id="section-metrics">
+            <div class="breadcrumb">
+                <span>Dashboard</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+                <span class="active">Metrics</span>
+            </div>
+            <div class="metrics-grid">
+                <section class="card metric-card-lg">
+                    <h2 class="card-title-mono">PROCESSING BREAKDOWN</h2>
+                    <p class="card-subtitle">Actions taken by the pipeline</p>
+                    <div class="metric-bars" id="metric-bars">
+                        <div class="metric-bar-row">
+                            <span class="metric-bar-label">Reply</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill blue" id="bar-reply" style="width:0%"></div>
+                            </div>
+                            <span class="metric-bar-value" id="bar-reply-val">0</span>
+                        </div>
+                        <div class="metric-bar-row">
+                            <span class="metric-bar-label">Archive</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill gray" id="bar-archive" style="width:0%"></div>
+                            </div>
+                            <span class="metric-bar-value" id="bar-archive-val">0</span>
+                        </div>
+                        <div class="metric-bar-row">
+                            <span class="metric-bar-label">Task</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill amber" id="bar-task" style="width:0%"></div>
+                            </div>
+                            <span class="metric-bar-value" id="bar-task-val">0</span>
+                        </div>
+                    </div>
+                </section>
+                <section class="card metric-card-lg">
+                    <h2 class="card-title-mono">URGENCY DISTRIBUTION</h2>
+                    <p class="card-subtitle">Email urgency classification</p>
+                    <div class="metric-bars">
+                        <div class="metric-bar-row">
+                            <span class="metric-bar-label">High</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill blue" id="bar-high" style="width:0%"></div>
+                            </div>
+                            <span class="metric-bar-value" id="bar-high-val">0</span>
+                        </div>
+                        <div class="metric-bar-row">
+                            <span class="metric-bar-label">Medium</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill blue" id="bar-medium" style="width:0%"></div>
+                            </div>
+                            <span class="metric-bar-value" id="bar-medium-val">0</span>
+                        </div>
+                        <div class="metric-bar-row">
+                            <span class="metric-bar-label">Low</span>
+                            <div class="metric-bar-track">
+                                <div class="metric-bar-fill blue" id="bar-low" style="width:0%"></div>
+                            </div>
+                            <span class="metric-bar-value" id="bar-low-val">0</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <section class="card" style="padding:24px;">
+                <h2 class="card-title-mono" style="margin-bottom:12px;">TOOL INTEGRATIONS</h2>
+                <div class="integrations-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div class="integration-item"><span class="int-name">AgentMail</span><span
+                            class="int-status connected"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg></span></div>
+                    <div class="integration-item"><span class="int-name">Firecrawl</span><span
+                            class="int-status connected"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg></span></div>
+                    <div class="integration-item"><span class="int-name">Roboflow</span><span
+                            class="int-status connected"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg></span></div>
+                    <div class="integration-item"><span class="int-name">Gumloop</span><span class="int-status"
+                            id="gumloop-status">Optional</span></div>
+                    <div class="integration-item"><span class="int-name">Omium</span><span class="int-status"
+                            id="omium-status">Optional</span></div>
+                    <div class="integration-item"><span class="int-name">OpenAI GPT-4o</span><span
+                            class="int-status connected"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg></span></div>
+                </div>
+            </section>
+        </div>
+    </main>
+    <!-- Reasoning Modal -->
+    <div class="modal-overlay" id="reasoning-modal" onclick="closeModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="card-title-mono">🧠 AGENT REASONING</h2>
+                <button class="modal-close" onclick="closeReasoningModal()">✕</button>
+            </div>
+            <div class="modal-body" id="reasoning-body"></div>
+        </div>
+    </div>
+    <script src="/static/app.js?v=22"></script>
+</body>
+
+</html>
