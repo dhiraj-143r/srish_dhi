@@ -637,5 +637,13 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshStats();
     refreshEmails();
     initChart();
-    setInterval(refreshStats, 30000);
+    
+    // Auto-refresh every 10 seconds: stats, email table, and chart
+    setInterval(() => {
+        refreshStats();
+        refreshEmails();
+        // Re-plot chart bars from real data
+        const activeFilter = document.getElementById('dropdown-text')?.textContent || '24 hours';
+        rebuildChart(activeFilter);
+    }, 10000);
 });
