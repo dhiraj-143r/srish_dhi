@@ -1,4 +1,4 @@
-# 📬 InboxPilot — Autonomous Multi-Agent Email Operations
+# InboxPilot — Autonomous Multi-Agent Email Operations
 
 > **An end-to-end autonomous email pipeline that triages, researches, analyzes attachments, drafts replies, and takes action — with zero human intervention.**
 
@@ -6,99 +6,99 @@ InboxPilot is a production-grade autonomous system built on **LangGraph** that p
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```mermaid
 graph TB
-    subgraph External["External Services"]
-        GM["📧 Gmail / Any Email Client"]
-        AM["📬 AgentMail API"]
-        OAI["🧠 OpenAI GPT-4o"]
-        FC["🔍 Firecrawl"]
-        RB["👁️ Roboflow"]
-        GL["⚙️ Gumloop"]
-        OM["📊 Omium"]
-    end
+ subgraph External["External Services"]
+  GM[" Gmail / Any Email Client"]
+  AM[" AgentMail API"]
+  OAI[" OpenAI GPT-4o"]
+  FC[" Firecrawl"]
+  RB[" Roboflow"]
+  GL[" Gumloop"]
+  OM[" Omium"]
+ end
 
-    subgraph Core["InboxPilot Core"]
-        WH["🔗 Webhook Endpoint<br/>/webhook/email"]
-        PL["⚡ LangGraph Pipeline"]
-        DB["🗄️ SQLite Database"]
-        WS["📡 WebSocket Server"]
-    end
+ subgraph Core["InboxPilot Core"]
+  WH[" Webhook Endpoint<br/>/webhook/email"]
+  PL[" LangGraph Pipeline"]
+  DB[" SQLite Database"]
+  WS[" WebSocket Server"]
+ end
 
-    subgraph Dashboard["Real-Time Dashboard"]
-        OV["📊 Overview"]
-        IN["📥 Inbox"]
-        AG["🤖 Agents"]
-        WK["🔗 Webhooks"]
-        MT["📈 Metrics"]
-    end
+ subgraph Dashboard["Real-Time Dashboard"]
+  OV[" Overview"]
+  IN[" Inbox"]
+  AG[" Agents"]
+  WK[" Webhooks"]
+  MT[" Metrics"]
+ end
 
-    GM -->|"Send email"| AM
-    AM -->|"Webhook POST"| WH
-    WH --> PL
-    PL -->|"Classify"| OAI
-    PL -->|"Research"| FC
-    PL -->|"Vision"| RB
-    PL -->|"Reply"| AM
-    PL -->|"Tasks"| GL
-    PL -->|"Traces"| OM
-    PL -->|"Store"| DB
-    PL -->|"Broadcast"| WS
-    WS --> Dashboard
-    DB --> Dashboard
+ GM -->|"Send email"| AM
+ AM -->|"Webhook POST"| WH
+ WH --> PL
+ PL -->|"Classify"| OAI
+ PL -->|"Research"| FC
+ PL -->|"Vision"| RB
+ PL -->|"Reply"| AM
+ PL -->|"Tasks"| GL
+ PL -->|"Traces"| OM
+ PL -->|"Store"| DB
+ PL -->|"Broadcast"| WS
+ WS --> Dashboard
+ DB --> Dashboard
 ```
 
 ---
 
-## 🔄 Pipeline Workflow
+## Pipeline Workflow
 
 Every email goes through this autonomous pipeline:
 
 ```mermaid
 graph LR
-    A["📨 Email Arrives<br/>via Webhook"] --> B["👀 Watcher<br/>Parse & Fetch"]
-    B --> C["🧠 Triage<br/>GPT-4o + CoT"]
-    C --> D{Needs Research?}
-    D -->|Yes| E["🔍 Researcher<br/>Firecrawl Scraping"]
-    D -->|No| F{Has Attachments?}
-    E --> F
-    F -->|Yes| G["👁️ Vision<br/>Roboflow CV"]
-    F -->|No| H["✍️ Drafter<br/>GPT-4o Reply"]
-    G --> H
-    H --> I["⚡ Action<br/>Execute Decision"]
-    I --> J{Action Type?}
-    J -->|reply| K["📤 Send Reply<br/>via AgentMail"]
-    J -->|archive| L["📁 Archive<br/>Silently"]
-    J -->|create_task| M["📋 Create Task<br/>+ Send Reply"]
-    J -->|escalate| N["🚨 Escalate<br/>+ Urgent Notification"]
-    K --> O["💾 Save to DB<br/>+ WebSocket Broadcast"]
-    L --> O
-    M --> O
-    N --> O
+ A[" Email Arrives<br/>via Webhook"] --> B[" Watcher<br/>Parse & Fetch"]
+ B --> C[" Triage<br/>GPT-4o + CoT"]
+ C --> D{Needs Research?}
+ D -->|Yes| E[" Researcher<br/>Firecrawl Scraping"]
+ D -->|No| F{Has Attachments?}
+ E --> F
+ F -->|Yes| G[" Vision<br/>Roboflow CV"]
+ F -->|No| H[" Drafter<br/>GPT-4o Reply"]
+ G --> H
+ H --> I[" Action<br/>Execute Decision"]
+ I --> J{Action Type?}
+ J -->|reply| K[" Send Reply<br/>via AgentMail"]
+ J -->|archive| L[" Archive<br/>Silently"]
+ J -->|create_task| M[" Create Task<br/>+ Send Reply"]
+ J -->|escalate| N[" Escalate<br/>+ Urgent Notification"]
+ K --> O[" Save to DB<br/>+ WebSocket Broadcast"]
+ L --> O
+ M --> O
+ N --> O
 ```
 
 ---
 
-## 🤖 Agent Details
+## Agent Details
 
 ```mermaid
 graph TD
-    subgraph Agents["7 Specialized Agents"]
-        W["👀 Watcher Agent<br/>━━━━━━━━━━━━<br/>• Parses webhook payload<br/>• Fetches full email from AgentMail<br/>• Extracts sender, subject, body<br/>• Loads thread context"]
-        T["🧠 Triage Agent<br/>━━━━━━━━━━━━<br/>• GPT-4o JSON mode<br/>• Chain-of-thought reasoning<br/>• Classifies: urgency, category<br/>• Decides: reply/archive/task/escalate"]
-        R["🔍 Research Agent<br/>━━━━━━━━━━━━<br/>• Firecrawl web scraping<br/>• Scrapes sender company website<br/>• Scrapes URLs in email body<br/>• Generates research summary"]
-        V["👁️ Vision Agent<br/>━━━━━━━━━━━━<br/>• Roboflow image classification<br/>• Analyzes image attachments<br/>• Identifies: invoices, receipts<br/>• Summarizes visual content"]
-        D["✍️ Drafter Agent<br/>━━━━━━━━━━━━<br/>• GPT-4o creative writing<br/>• Uses triage + research + vision<br/>• Tone matches urgency<br/>• 3-6 sentence contextual replies"]
-        AC["⚡ Action Agent<br/>━━━━━━━━━━━━<br/>• Sends replies via AgentMail<br/>• Creates tasks via Gumloop<br/>• Archives newsletters<br/>• Escalates emergencies"]
-        S["📊 Summarizer Agent<br/>━━━━━━━━━━━━<br/>• Runs every 6 hours (cron)<br/>• Aggregates processed emails<br/>• Generates email digest<br/>• Sends summary report"]
-    end
+ subgraph Agents["7 Specialized Agents"]
+  W[" Watcher Agent<br/>━━━━━━━━━━━━<br/>• Parses webhook payload<br/>• Fetches full email from AgentMail<br/>• Extracts sender, subject, body<br/>• Loads thread context"]
+  T[" Triage Agent<br/>━━━━━━━━━━━━<br/>• GPT-4o JSON mode<br/>• Chain-of-thought reasoning<br/>• Classifies: urgency, category<br/>• Decides: reply/archive/task/escalate"]
+  R[" Research Agent<br/>━━━━━━━━━━━━<br/>• Firecrawl web scraping<br/>• Scrapes sender company website<br/>• Scrapes URLs in email body<br/>• Generates research summary"]
+  V[" Vision Agent<br/>━━━━━━━━━━━━<br/>• Roboflow image classification<br/>• Analyzes image attachments<br/>• Identifies: invoices, receipts<br/>• Summarizes visual content"]
+  D[" Drafter Agent<br/>━━━━━━━━━━━━<br/>• GPT-4o creative writing<br/>• Uses triage + research + vision<br/>• Tone matches urgency<br/>• 3-6 sentence contextual replies"]
+  AC[" Action Agent<br/>━━━━━━━━━━━━<br/>• Sends replies via AgentMail<br/>• Creates tasks via Gumloop<br/>• Archives newsletters<br/>• Escalates emergencies"]
+  S[" Summarizer Agent<br/>━━━━━━━━━━━━<br/>• Runs every 6 hours (cron)<br/>• Aggregates processed emails<br/>• Generates email digest<br/>• Sends summary report"]
+ end
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
@@ -116,7 +116,7 @@ graph TD
 
 ---
 
-## 🚀 Quickstart (Clean Machine → Green Demo in 5 Minutes)
+## Quickstart (Clean Machine → Green Demo in 5 Minutes)
 
 ### Prerequisites
 
@@ -132,8 +132,8 @@ cd srish_dhi/inbox-pilot
 
 # Create virtual environment
 python3 -m venv venv
-source venv/bin/activate    # macOS/Linux
-# venv\Scripts\activate     # Windows
+source venv/bin/activate # macOS/Linux
+# venv\Scripts\activate  # Windows
 
 # Install dependencies
 pip install -r requirements.txt
@@ -153,9 +153,9 @@ FIRECRAWL_API_KEY=fc-your_key_here
 ROBOFLOW_API_KEY=your_key_here
 ROBOFLOW_PUBLISHABLE_KEY=rf_your_key_here
 OPENAI_API_KEY=sk-your_key_here
-GUMLOOP_API_KEY=                    # Optional
-GUMLOOP_USER_ID=                    # Optional
-OMIUM_API_KEY=omium_your_key_here   # Optional (bonus tracing)
+GUMLOOP_API_KEY=     # Optional
+GUMLOOP_USER_ID=     # Optional
+OMIUM_API_KEY=omium_your_key_here # Optional (bonus tracing)
 ```
 
 ### Step 3: Start the Tunnel
@@ -176,30 +176,30 @@ python main.py
 You should see:
 
 ```
-🚀 InboxPilot starting up...
-✅ Database initialized
-🔍 Omium tracing initialized (LangGraph auto-instrumented)
-📬 Agent inbox: yourname@agentmail.to
-🖥️  Dashboard: http://localhost:8000
+ InboxPilot starting up...
+ Database initialized
+ Omium tracing initialized (LangGraph auto-instrumented)
+ Agent inbox: yourname@agentmail.to
+ Dashboard: http://localhost:8000
 ```
 
 ### Step 5: Register Webhook
 
 ```bash
 curl -X POST http://localhost:8000/api/webhook/register \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://YOUR-NGROK-URL/webhook/email"}'
+ -H "Content-Type: application/json" \
+ -d '{"url": "https://YOUR-NGROK-URL/webhook/email"}'
 ```
 
 ### Step 6: Send a Test Email
 
 Send an email to the inbox address shown in the startup logs (e.g., `yourname@agentmail.to`).
 
-**Watch it process autonomously in the dashboard at `http://localhost:8000`** ✅
+**Watch it process autonomously in the dashboard at `http://localhost:8000`** 
 
 ---
 
-## 📊 Dashboard
+## Dashboard
 
 The real-time monitoring dashboard has 5 tabs:
 
@@ -221,44 +221,44 @@ The real-time monitoring dashboard has 5 tabs:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 inbox-pilot/
-├── main.py                  # FastAPI app, webhook handler, API routes
-├── config.py                # Centralized configuration from .env
-├── requirements.txt         # Python dependencies
-├── .env.example             # Environment template
+├── main.py     # FastAPI app, webhook handler, API routes
+├── config.py    # Centralized configuration from .env
+├── requirements.txt   # Python dependencies
+├── .env.example    # Environment template
 │
-├── agents/                  # LangGraph agent implementations
-│   ├── graph.py             # StateGraph pipeline definition
-│   ├── state.py             # Typed EmailState schema
-│   ├── watcher.py           # Email parser agent
-│   ├── triage.py            # GPT-4o classifier agent
-│   ├── researcher.py        # Firecrawl research agent
-│   ├── vision.py            # Roboflow vision agent
-│   ├── drafter.py           # GPT-4o reply drafter
-│   ├── action.py            # Action executor agent
-│   └── summarizer.py        # Cron-based digest agent
+├── agents/     # LangGraph agent implementations
+│ ├── graph.py    # StateGraph pipeline definition
+│ ├── state.py    # Typed EmailState schema
+│ ├── watcher.py   # Email parser agent
+│ ├── triage.py   # GPT-4o classifier agent
+│ ├── researcher.py  # Firecrawl research agent
+│ ├── vision.py   # Roboflow vision agent
+│ ├── drafter.py   # GPT-4o reply drafter
+│ ├── action.py   # Action executor agent
+│ └── summarizer.py  # Cron-based digest agent
 │
-├── tools/                   # External tool integrations
-│   ├── agentmail_tools.py   # AgentMail SDK wrapper
-│   ├── firecrawl_tools.py   # Firecrawl web scraping
-│   ├── roboflow_tools.py    # Roboflow computer vision
-│   └── gumloop_tools.py     # Gumloop task automation
+├── tools/     # External tool integrations
+│ ├── agentmail_tools.py # AgentMail SDK wrapper
+│ ├── firecrawl_tools.py # Firecrawl web scraping
+│ ├── roboflow_tools.py # Roboflow computer vision
+│ └── gumloop_tools.py  # Gumloop task automation
 │
-├── database/                # Database layer
-│   └── db.py                # SQLite schema, CRUD operations
+├── database/    # Database layer
+│ └── db.py    # SQLite schema, CRUD operations
 │
-└── dashboard/               # Frontend
-    ├── index.html           # Single-page app (5 tabs)
-    ├── styles.css           # Dark theme UI styles
-    └── app.js               # Charts, WebSocket, auto-refresh
+└── dashboard/    # Frontend
+ ├── index.html   # Single-page app (5 tabs)
+ ├── styles.css   # Dark theme UI styles
+ └── app.js    # Charts, WebSocket, auto-refresh
 ```
 
 ---
 
-## 🔗 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -273,7 +273,7 @@ inbox-pilot/
 
 ---
 
-## 📈 Omium Observability (Bonus)
+## Omium Observability (Bonus)
 
 When `OMIUM_API_KEY` is set, InboxPilot automatically:
 
@@ -285,18 +285,18 @@ When `OMIUM_API_KEY` is set, InboxPilot automatically:
 View traces at [app.omium.ai](https://app.omium.ai) → **inbox-pilot** project.
 
 ```
-📊 pipeline.ainvoke()
-  ├── watcher_agent    → Parse email
-  ├── triage_agent     → Classify with GPT-4o
-  ├── researcher_agent → Web scraping (conditional)
-  ├── vision_agent     → Attachment analysis (conditional)
-  ├── drafter_agent    → Generate reply
-  └── action_agent     → Execute action
+ pipeline.ainvoke()
+ ├── watcher_agent → Parse email
+ ├── triage_agent  → Classify with GPT-4o
+ ├── researcher_agent → Web scraping (conditional)
+ ├── vision_agent  → Attachment analysis (conditional)
+ ├── drafter_agent → Generate reply
+ └── action_agent  → Execute action
 ```
 
 ---
 
-## 🧪 Test Emails
+## Test Emails
 
 Send these to your agent inbox to test different action types:
 
@@ -326,6 +326,6 @@ Body: Our security team detected unauthorized access to the customer database. A
 
 ---
 
-## 📝 License
+## License
 
 MIT
